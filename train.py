@@ -14,7 +14,6 @@ from hyperparameter import(
     print_step,
     render_step,
     n_training_episodes,
-    n_evaluation_episodes,
     max_t,
     max_t_sim,
     gamma,
