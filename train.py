@@ -110,8 +110,11 @@ if __name__ == '__main__':
         rewards.append(r)
 
         if r > best_reward or e == 1:
-            torch.save({'model_state_dict': actor.state_dict()}, f'checkpoints/{model_name}_actor_checkpoint.pth')
-            torch.save({'model_state_dict': critic.state_dict()}, f'checkpoints/{model_name}_critic_checkpoint.pth')
+            torch.save({'model_state_dict': actor.state_dict()}, f'checkpoints/{model_name}_best_actor_checkpoint.pth')
+            torch.save({'model_state_dict': critic.state_dict()}, f'checkpoints/{model_name}_best_critic_checkpoint.pth')
             print('Saving the best model')
+        
+        torch.save({'model_state_dict': actor.state_dict()}, f'checkpoints/{model_name}_actor_checkpoint.pth')
+        torch.save({'model_state_dict': critic.state_dict()}, f'checkpoints/{model_name}_critic_checkpoint.pth')
 
     print('Done!')
