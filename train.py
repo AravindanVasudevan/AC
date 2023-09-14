@@ -56,7 +56,6 @@ def train(e, env, name, max_t, max_t_sim, actor, critic, opt_actor, opt_critic, 
         total_reward += reward
         state = next_state
        
-        # critic_loss = 0.5 * advantage.pow(2).mean()
         critic_loss = 0.5 * (value_curr_state - (reward + (gamma * value_next_state))).pow(2).mean()
         opt_critic.zero_grad()
         critic_loss.backward()
@@ -91,40 +90,9 @@ def train(e, env, name, max_t, max_t_sim, actor, critic, opt_actor, opt_critic, 
 
     return total_reward
 
-def evaluate(name, env, max_steps, n_eval_episodes, actor, critic):
-    actor.eval()
-    episode_rewards = []
-    for episode in range(n_eval_episodes):
-        state, _ = env.reset()
-        total_rewards_ep = 0
-        frames = []
-        state, _ = env.reset()
-        for _ in range(max_steps):
-            mean, stddev = actor(state)
-            action = torch.normal(mean, stddev)
-            action = action.squeeze().detach().cpu().numpy()
-
-            next_state, reward, terminated, _, _ = env.step(action)  
-            frame = env.render()
-            frames.append(frame)
-            imageio.mimsave(f'simulations/{name}_simulation_episode_{episode}.gif', frames)
-
-            if terminated:
-                break
-            state = next_state
-        print(f'simulation for training episode {episode} is saved')
-        episode_rewards.append(total_rewards_ep)
-
-    mean_reward = np.mean(episode_rewards)
-    std_reward = np.std(episode_rewards)
-
-    return mean_reward, std_reward
-
 if __name__ == '__main__':
     env = gym.make(env_id, render_mode = 'rgb_array')
     eval_env = gym.make(env_id, render_mode = 'rgb_array')
-
-    stats = {'actor loss':[], 'critic loss':[], 'return':[]}
     
     state_size = env.observation_space.shape[0]
     action_size = env.action_space.shape[0]
@@ -135,14 +103,15 @@ if __name__ == '__main__':
     opt_critic = torch.optim.Adam(critic.parameters(), lr = lr_c)
 
     rewards = []
+    best_reward = 0
 
     for e in range(1, n_training_episodes + 1):
         r = train(e, env, t_name, max_t, max_t_sim, actor, critic, opt_actor, opt_critic, print_step, render_step, gamma)
         rewards.append(r)
-    
-    evaluate(e_name, env, max_t_sim, n_evaluation_episodes, actor, critic)
 
-    torch.save({'model_state_dict': actor.state_dict()}, f'checkpoints/{model_name}_actor_checkpoint.pth')
-    torch.save({'model_state_dict': critic.state_dict()}, f'checkpoints/{model_name}_critic_checkpoint.pth')
+        if r > best_reward or e == 1:
+            torch.save({'model_state_dict': actor.state_dict()}, f'checkpoints/{model_name}_actor_checkpoint.pth')
+            torch.save({'model_state_dict': critic.state_dict()}, f'checkpoints/{model_name}_critic_checkpoint.pth')
+            print('Saving the best model')
 
     print('Done!')
