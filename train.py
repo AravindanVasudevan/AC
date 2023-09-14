@@ -64,10 +64,11 @@ def train(e, env, name, max_t, max_t_sim, actor, critic, opt_actor, opt_critic, 
         opt_actor.zero_grad()
         actor_loss.backward()
         opt_actor.step()
-        
-    if e % render_step == 0 or e == 1:
-        print(f'Episode {e} Reward: {total_reward}')
 
+    if e % print_step == 0 or e == 1:
+        print(f'Episode {e} Reward: {total_reward}')
+    
+    if e % render_step == 0 or e == 1:
         actor.eval()
         frames = []
         state, _ = env.reset()
