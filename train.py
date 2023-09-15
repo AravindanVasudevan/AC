@@ -22,7 +22,6 @@ from hyperparameter import(
     env_id,
     device,
     t_name,
-    e_name,
     model_name
 )
 
