@@ -35,15 +35,15 @@ def train(e, env, name, max_t, max_t_sim, actor, critic, opt_actor, opt_critic, 
     for _ in range(max_t):
         mean, stddev = actor(state)
         stddev = stddev + 1e-8
-        action = torch.normal(mean, stddev)
         action_dist = Normal(mean, stddev)
+        action = action_dist.sample()
         log_prob = action_dist.log_prob(action)
         log_prob = log_prob.sum()
         action = action.squeeze().detach().cpu().numpy()
 
-        next_state, reward, terminated, _, _ = env.step(action)
+        next_state, reward, terminated, truncated, _ = env.step(action)
 
-        if terminated:
+        if terminated or truncated:
             break
 
         value_curr_state = critic(state)
@@ -70,28 +70,30 @@ def train(e, env, name, max_t, max_t_sim, actor, critic, opt_actor, opt_critic, 
     if e % render_step == 0 or e == 1:
         actor.eval()
         frames = []
+        sim_reward = 0
         state, _ = env.reset()
         for _ in range(max_t_sim):
             mean, stddev = actor(state)
-            action = torch.normal(mean, stddev)
+            action_dist = Normal(mean, stddev)
+            action = action_dist.sample()
             action = action.squeeze().detach().cpu().numpy()
 
-            next_state, reward, terminated, _, _ = env.step(action)  
+            next_state, reward, terminated, truncated, _ = env.step(action)  
+            sim_reward += reward
             frame = env.render()
             frames.append(frame)
             imageio.mimsave(f'simulations/{name}_simulation_episode_{e}.gif', frames)
-
-            if terminated:
-                break
             state = next_state
 
-        print(f'simulation for training episode {e} is saved')
+            if terminated or truncated:
+                break
+
+        print(f'simulation for training episode {e} is saved and the reward obtained is {sim_reward}')
 
     return total_reward
 
 if __name__ == '__main__':
     env = gym.make(env_id, render_mode = 'rgb_array')
-    eval_env = gym.make(env_id, render_mode = 'rgb_array')
     
     state_size = env.observation_space.shape[0]
     action_size = env.action_space.shape[0]
