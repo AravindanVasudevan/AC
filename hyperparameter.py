@@ -1,14 +1,12 @@
 import torch
 
-print_step = 100
-render_step = 250
+print_step = 10
+render_step = 200
 n_training_episodes = 1000
-max_t = 1000
-max_t_sim = 100
 gamma = 0.99
-lr_a = 0.0001
-lr_c = 0.001
-env_id = 'HalfCheetah-v4'
+lr_a = 0.0005
+lr_c = 0.0001
+env_id = 'LunarLander-v2'
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-t_name = 'train'
-model_name = 'HalfCheetah'
+model_save_name = 'LunarLander'
+frame_render = 5
